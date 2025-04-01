@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, OneToMany } from 'typeorm';
 import { RefreshToken } from './refresh-token.entity';
 
 @Entity('users')
@@ -9,16 +9,16 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column()
+  @Column({ name: 'password_hash' })
   password_hash: string;
 
-  @CreateDateColumn({ type: 'timestamptz' })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   created_at: Date;
 
-  @Column({ type: 'timestamptz', nullable: true })
+  @Column({ name: 'last_login', type: 'timestamptz', nullable: true })
   last_login: Date;
 
-  @Column({ default: true })
+  @Column({ name: 'is_active', type: 'boolean', default: true })
   is_active: boolean;
 
   @OneToMany(() => RefreshToken, token => token.user)
