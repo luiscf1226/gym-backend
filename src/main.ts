@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { Logger } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { WinstonModule } from 'nest-winston';
 import * as winston from 'winston';
 import 'winston-daily-rotate-file';
@@ -39,22 +39,40 @@ async function bootstrap() {
   // Basic CORS setup
   app.enableCors();
 
-  // Swagger setup - as simple as possible
+  // Global prefix for API routes
+  app.setGlobalPrefix('api');
+
+  // Enable validation globally
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    })
+  );
+
+  // Swagger setup after global prefix
   const config = new DocumentBuilder()
     .setTitle('Gym App API')
     .setDescription('Gym App API Documentation')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
     
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, document);
+  SwaggerModule.setup('docs', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true,
+      tagsSorter: 'alpha',
+      operationsSorter: 'alpha',
+    },
+  });
   
-  // Global prefix for API routes
-  app.setGlobalPrefix('api');
-  
-  await app.listen(3000);
-  console.log('Application is running on: http://localhost:3000');
-  console.log('Swagger documentation is available at: http://localhost:3000/docs');
+  const port = process.env.PORT || 3000;
+  await app.listen(port);
+  console.log(`Application is running on: http://localhost:${port}`);
+  console.log(`API endpoints are available at: http://localhost:${port}/api`);
+  console.log(`Swagger documentation is available at: http://localhost:${port}/docs`);
 }
 
 bootstrap(); 
