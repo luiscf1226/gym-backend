@@ -8,6 +8,7 @@ import { JwtService } from './jwt.service';
 import * as bcrypt from 'bcrypt';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { LoginDto } from './dto/login.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @Injectable()
 export class AuthService {
@@ -122,6 +123,74 @@ export class AuthService {
       max_workouts_per_month: user.max_workouts_per_month,
       access_token: accessToken,
       refresh_token: refreshToken,
+    };
+  }
+
+  async refreshToken(refreshTokenDto: RefreshTokenDto) {
+    // Find the refresh token and check if it's valid
+    const refreshTokenEntity = await this.refreshTokenRepository
+      .createQueryBuilder('rt')
+      .innerJoinAndSelect('rt.user', 'user')
+      .where('rt.refresh_token = :token', { token: refreshTokenDto.refresh_token })
+      .andWhere('rt.is_revoked = :revoked', { revoked: false })
+      .andWhere('rt.expires_at > :now', { now: new Date() })
+      .getOne();
+
+    if (!refreshTokenEntity) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    // Get current subscription status
+    const userWithSubscription = await this.userRepository
+      .createQueryBuilder('user')
+      .leftJoin('user_subscription_status', 'uss', 'uss.user_id = user.user_id')
+      .select([
+        'user.user_id as user_id',
+        'user.email as user_email',
+        'user.is_active as user_is_active',
+        'uss.tier_name as subscription_tier',
+        'uss.ai_features_included',
+        'uss.max_workouts_per_month'
+      ])
+      .where('user.user_id = :userId', { userId: refreshTokenEntity.user_id })
+      .getRawOne();
+
+    if (!userWithSubscription || !userWithSubscription.user_is_active) {
+      // Revoke the refresh token if user is inactive
+      await this.refreshTokenRepository.update(
+        { token_id: refreshTokenEntity.token_id },
+        { is_revoked: true }
+      );
+      throw new UnauthorizedException('User is inactive');
+    }
+
+    // Generate new tokens (implement token rotation)
+    const [accessToken, newRefreshToken] = await Promise.all([
+      this.jwtService.generateAccessToken({
+        sub: userWithSubscription.user_id,
+        email: userWithSubscription.user_email,
+        is_active: userWithSubscription.user_is_active,
+        subscription_tier: userWithSubscription.subscription_tier,
+        ai_features_included: userWithSubscription.ai_features_included,
+        max_workouts_per_month: userWithSubscription.max_workouts_per_month
+      }),
+      this.jwtService.generateRefreshToken(userWithSubscription.user_id)
+    ]);
+
+    // Revoke the old refresh token
+    await this.refreshTokenRepository.update(
+      { token_id: refreshTokenEntity.token_id },
+      { is_revoked: true }
+    );
+
+    return {
+      user_id: userWithSubscription.user_id,
+      email: userWithSubscription.user_email,
+      subscription_tier: userWithSubscription.subscription_tier,
+      ai_features_included: userWithSubscription.ai_features_included,
+      max_workouts_per_month: userWithSubscription.max_workouts_per_month,
+      access_token: accessToken,
+      refresh_token: newRefreshToken
     };
   }
 }

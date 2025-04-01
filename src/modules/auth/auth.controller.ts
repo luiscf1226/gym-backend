@@ -2,6 +2,7 @@ import { Controller, Post, Body, UsePipes, ValidationPipe, HttpCode, HttpStatus,
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/signup.dto';
 import { LoginDto } from './dto/login.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { Throttle, SkipThrottle, ThrottlerGuard } from '@nestjs/throttler';
 
@@ -82,5 +83,35 @@ export class AuthController {
   @ApiResponse({ status: 429, description: 'Too Many Requests - Rate limit exceeded' })
   async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
+  }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ValidationPipe({ transform: true }))
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 requests per minute for refresh
+  @ApiOperation({ summary: 'Refresh access token using refresh token' })
+  @ApiBody({
+    type: RefreshTokenDto,
+    description: 'Refresh token credentials'
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Token successfully refreshed',
+    schema: {
+      example: {
+        user_id: "123e4567-e89b-12d3-a456-426614174000",
+        email: "user@example.com",
+        subscription_tier: "pro",
+        ai_features_included: true,
+        max_workouts_per_month: null,
+        access_token: "eyJhbGciOiJIUzI1...",
+        refresh_token: "abc123..."
+      }
+    }
+  })
+  @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
+  @ApiResponse({ status: 429, description: 'Too Many Requests - Rate limit exceeded' })
+  async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
+    return this.authService.refreshToken(refreshTokenDto);
   }
 }

@@ -4,8 +4,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
 import { User } from './modules/auth/entities/user.entity';
 import { RefreshToken } from './modules/auth/entities/refresh-token.entity';
+import { UserProfile } from './modules/users/entities/user-profile.entity';
 
 @Module({
   imports: [
@@ -36,7 +38,7 @@ import { RefreshToken } from './modules/auth/entities/refresh-token.entity';
           username: configService.get('DB_USER'),
           password: configService.get('DB_PASSWORD'),
           database: configService.get('DB_NAME'),
-          entities: [User, RefreshToken],
+          entities: [User, RefreshToken, UserProfile],
           synchronize: false,
           ssl: true,
           extra: {
@@ -53,6 +55,7 @@ import { RefreshToken } from './modules/auth/entities/refresh-token.entity';
     }),
     HealthModule,
     AuthModule,
+    UsersModule,
   ],
 })
 export class AppModule {} 
