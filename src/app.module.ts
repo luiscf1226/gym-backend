@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { User } from './modules/auth/entities/user.entity';
@@ -10,6 +11,17 @@ import { RefreshToken } from './modules/auth/entities/refresh-token.entity';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+    }),
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ([
+        {
+          ttl: 60000, // 1 minute
+          limit: 10,  // 10 requests per minute
+          ignoreUserAgents: [/^postman/i], // Optionally ignore Postman for testing
+        },
+      ]),
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],

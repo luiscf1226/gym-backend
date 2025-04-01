@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtService } from './jwt.service';
@@ -21,6 +22,7 @@ import { RefreshToken } from './entities/refresh-token.entity';
       }),
       inject: [ConfigService],
     }),
+    ThrottlerModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtService],
