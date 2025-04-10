@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { User } from '../auth/entities/user.entity';
 import { UserProfile } from './entities/user-profile.entity';
 import { UserProfileResponse } from './interfaces/profile.interface';
+import { SetupBasicProfileDto } from './dto/setup-basic-profile.dto';
 
 @Injectable()
 export class UsersService {
@@ -61,8 +62,11 @@ export class UsersService {
       height: profile?.height || null,
       weight: profile?.weight || null,
       fitness_level: profile?.fitness_level || null,
-      fitness_goals: profile?.fitness_goals || null,
+      primary_goal: profile?.primary_goal || null,
       preferences: profile?.preferences || null,
+      setup_completed: profile?.setup_completed || false,
+      preferred_workout_duration: profile?.preferred_workout_duration || null,
+      workout_frequency: profile?.workout_frequency || null,
       
       // Profile metadata
       profile_created_at: profile?.created_at || null,
@@ -72,5 +76,29 @@ export class UsersService {
       account_created_at: userWithSubscription.created_at,
       last_login: userWithSubscription.last_login,
     };
+  }
+
+  async setupBasicProfile(userId: string, profileData: SetupBasicProfileDto): Promise<UserProfile> {
+    let profile = await this.userProfileRepository.findOne({
+      where: { user_id: userId }
+    });
+
+    if (profile) {
+      // Update existing profile
+      Object.assign(profile, {
+        ...profileData,
+        setup_completed: true,
+        updated_at: new Date()
+      });
+    } else {
+      // Create new profile
+      profile = this.userProfileRepository.create({
+        user_id: userId,
+        ...profileData,
+        setup_completed: true
+      });
+    }
+
+    return this.userProfileRepository.save(profile);
   }
 } 

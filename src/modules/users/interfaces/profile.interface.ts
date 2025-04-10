@@ -17,8 +17,11 @@ export interface UserProfileResponse {
   height: number | null;
   weight: number | null;
   fitness_level: string | null;
-  fitness_goals: string | null;
+  primary_goal: string | null;
   preferences: Record<string, any> | null;
+  setup_completed: boolean;
+  preferred_workout_duration: number | null;
+  workout_frequency: number | null;
   
   // Profile metadata
   profile_created_at: Date | null;

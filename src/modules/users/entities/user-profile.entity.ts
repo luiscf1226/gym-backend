@@ -27,11 +27,20 @@ export class UserProfile {
   @Column({ nullable: true })
   fitness_level: string;
 
-  @Column({ type: 'text', nullable: true })
-  fitness_goals: string;
+  @Column({ nullable: true })
+  primary_goal: string;
 
   @Column({ type: 'jsonb', nullable: true })
   preferences: Record<string, any>;
+
+  @Column({ default: false })
+  setup_completed: boolean;
+
+  @Column({ type: 'integer', nullable: true })
+  preferred_workout_duration: number;
+
+  @Column({ type: 'integer', nullable: true })
+  workout_frequency: number;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   created_at: Date;
