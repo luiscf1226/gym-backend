@@ -5,6 +5,7 @@ import { User } from '../auth/entities/user.entity';
 import { UserProfile } from './entities/user-profile.entity';
 import { UserProfileResponse } from './interfaces/profile.interface';
 import { SetupBasicProfileDto } from './dto/setup-basic-profile.dto';
+import { SetupFitnessProfileDto } from './dto/setup-fitness-profile.dto';
 
 @Injectable()
 export class UsersService {
@@ -98,6 +99,25 @@ export class UsersService {
         setup_completed: true
       });
     }
+
+    return this.userProfileRepository.save(profile);
+  }
+
+  async setupFitnessProfile(userId: string, fitnessData: SetupFitnessProfileDto): Promise<UserProfile> {
+    let profile = await this.userProfileRepository.findOne({
+      where: { user_id: userId }
+    });
+
+    if (!profile) {
+      throw new NotFoundException('User profile not found. Please complete basic profile setup first.');
+    }
+
+    // Update profile with fitness data
+    Object.assign(profile, {
+      ...fitnessData,
+      setup_completed: true,
+      updated_at: new Date()
+    });
 
     return this.userProfileRepository.save(profile);
   }

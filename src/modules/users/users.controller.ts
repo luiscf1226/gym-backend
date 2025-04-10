@@ -5,6 +5,7 @@ import { GetUser } from '../auth/decorators/get-user.decorator';
 import { UsersService } from './users.service';
 import { UserProfileResponse } from './interfaces/profile.interface';
 import { SetupBasicProfileDto } from './dto/setup-basic-profile.dto';
+import { SetupFitnessProfileDto } from './dto/setup-fitness-profile.dto';
 
 @ApiTags('Users')
 @Controller('users')
@@ -67,5 +68,33 @@ export class UsersController {
     @Body() profileData: SetupBasicProfileDto
   ) {
     return this.usersService.setupBasicProfile(userId, profileData);
+  }
+
+  @Post('profile/setup/fitness')
+  @ApiOperation({ summary: 'Setup or update user fitness profile information' })
+  @ApiResponse({ 
+    status: 201, 
+    description: 'Fitness profile setup completed successfully',
+    type: 'object',
+    schema: {
+      example: {
+        user_id: "123e4567-e89b-12d3-a456-426614174000",
+        fitness_level: "intermediate",
+        primary_goal: "muscle_gain",
+        preferred_workout_duration: 60,
+        workout_frequency: 4,
+        setup_completed: true,
+        updated_at: "2024-04-01T00:00:00.000Z"
+      }
+    }
+  })
+  @ApiResponse({ status: 400, description: 'Invalid input data' })
+  @ApiResponse({ status: 401, description: 'Unauthorized - Invalid or expired token' })
+  @ApiResponse({ status: 404, description: 'User profile not found - Complete basic profile setup first' })
+  async setupFitnessProfile(
+    @GetUser('user_id') userId: string,
+    @Body() fitnessData: SetupFitnessProfileDto
+  ) {
+    return this.usersService.setupFitnessProfile(userId, fitnessData);
   }
 } 
