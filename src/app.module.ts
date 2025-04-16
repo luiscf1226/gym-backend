@@ -5,9 +5,15 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
+import { ExercisesModule } from './modules/exercises/exercises.module';
 import { User } from './modules/auth/entities/user.entity';
 import { RefreshToken } from './modules/auth/entities/refresh-token.entity';
 import { UserProfile } from './modules/users/entities/user-profile.entity';
+import { Exercise } from './modules/exercises/entities/exercise.entity';
+import { MuscleGroup } from './modules/exercises/entities/muscle-group.entity';
+import { ExerciseMuscleGroup } from './modules/exercises/entities/exercise-muscle-group.entity';
+import { ExerciseKnowledge } from './modules/exercises/entities/exercise-knowledge.entity';
+import { ExerciseEquipment } from './modules/exercises/entities/exercise-equipment.entity';
 
 @Module({
   imports: [
@@ -38,7 +44,16 @@ import { UserProfile } from './modules/users/entities/user-profile.entity';
           username: configService.get('DB_USER'),
           password: configService.get('DB_PASSWORD'),
           database: configService.get('DB_NAME'),
-          entities: [User, RefreshToken, UserProfile],
+          entities: [
+            User, 
+            RefreshToken, 
+            UserProfile, 
+            Exercise, 
+            MuscleGroup, 
+            ExerciseMuscleGroup, 
+            ExerciseKnowledge,
+            ExerciseEquipment
+          ],
           synchronize: false,
           ssl: true,
           extra: {
@@ -48,7 +63,7 @@ import { UserProfile } from './modules/users/entities/user-profile.entity';
             poolMode: configService.get('DB_POOL_MODE')
           },
           logging: configService.get('NODE_ENV') === 'development',
-          autoLoadEntities: true,
+          autoLoadEntities: false, // Set to false since we're explicitly listing entities
         };
       },
       inject: [ConfigService],
@@ -56,6 +71,7 @@ import { UserProfile } from './modules/users/entities/user-profile.entity';
     HealthModule,
     AuthModule,
     UsersModule,
+    ExercisesModule,
   ],
 })
 export class AppModule {} 
